@@ -1,0 +1,23 @@
+{
+  "activationTargetName": "pk_test_mc",
+  "dataSpaceName": "default",
+  "name": "Segment_Name_MC",
+  "segmentApiName": "Segment_Developer_Name",
+  "refreshType": "FULL_REFRESH",
+  "activationTargetSubjectConfig": {
+    "developerName": "ssot__Individual__dlm"
+  },
+  "attributesConfig": {
+    "attributes": [
+      {
+        "dataSourceType": "Text",
+        "entityName": "ssot__Individual__dlm",
+        "label": "Individual Id",
+        "name": "ssot__Id__c",
+        "referenceAttributeName": "Id",
+        "source": "DIRECT",
+        "type": "MODEL"
+      }
+    ]
+  }
+}

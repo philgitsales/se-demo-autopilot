@@ -1,0 +1,30 @@
+{
+  "schemas": [
+    {
+      "label": "Demo_Contacts",
+      "name": "Demo_Contacts",
+      "schemaType": "IngestApi",
+      "fields": [
+        {"name": "ContactId", "label": "ContactId", "dataType": "Text"},
+        {"name": "FirstName", "label": "FirstName", "dataType": "Text"},
+        {"name": "LastName", "label": "LastName", "dataType": "Text"},
+        {"name": "Email", "label": "Email", "dataType": "Text"},
+        {"name": "Phone", "label": "Phone", "dataType": "Text"},
+        {"name": "Industry", "label": "Industry", "dataType": "Text"},
+        {"name": "Company", "label": "Company", "dataType": "Text"},
+        {"name": "City", "label": "City", "dataType": "Text"},
+        {"name": "State", "label": "State", "dataType": "Text"},
+        {"name": "Country", "label": "Country", "dataType": "Text"},
+        {"name": "LeadSource", "label": "LeadSource", "dataType": "Text"},
+        {"name": "CustomerTier", "label": "CustomerTier", "dataType": "Text"},
+        {"name": "LifetimeValue", "label": "LifetimeValue", "dataType": "Number"},
+        {"name": "LastPurchaseDate", "label": "LastPurchaseDate", "dataType": "DateTime"},
+        {"name": "SignupDate", "label": "SignupDate", "dataType": "DateTime"},
+        {"name": "IsActive", "label": "IsActive", "dataType": "Text"},
+        {"name": "PreferredChannel", "label": "PreferredChannel", "dataType": "Text"},
+        {"name": "InsuranceType", "label": "InsuranceType", "dataType": "Text"},
+        {"name": "PatientStatus", "label": "PatientStatus", "dataType": "Text"}
+      ]
+    }
+  ]
+}

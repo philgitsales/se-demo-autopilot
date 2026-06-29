@@ -1,0 +1,8 @@
+{
+  "apiName": "High_Intent_Web_Visitors",
+  "displayName": "High Intent Web Visitors",
+  "description": "Contacts who visited pricing, demo, or contact pages",
+  "definitionType": "CALCULATED_METRIC",
+  "expression": "SELECT WebActivity_Home__dlm.RelatedContact_c_c__c AS contact_id__c, COUNT(WebActivity_Home__dlm.Id_c__c) AS visit_count__c FROM WebActivity_Home__dlm WHERE WebActivity_Home__dlm.PageVisited_c_c__c IN ('https://www.example.com/pricing', 'https://www.example.com/demo', 'https://www.example.com/contact') GROUP BY WebActivity_Home__dlm.RelatedContact_c_c__c",
+  "publishScheduleInterval": "6"
+}

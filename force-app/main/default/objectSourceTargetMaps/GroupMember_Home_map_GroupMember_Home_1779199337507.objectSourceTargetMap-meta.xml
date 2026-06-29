@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ObjectSourceTargetMap xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <creationType>Custom</creationType>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>true</isSourceFormula>
+        <sourceField xsi:nil="true"/>
+        <sourceFormula>IF(LEFT(sourceField[&apos;UserOrGroupId&apos;],3)==&apos;005&apos;,sourceField[&apos;UserOrGroupId&apos;],&apos;&apos;)</sourceFormula>
+        <targetField>GroupMember_Home__dll.RelatedUserId__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>GroupMember_Home.UserOrGroupId__c</sourceField>
+        <sourceFormula>UserOrGroupId</sourceFormula>
+        <targetField>GroupMember_Home__dll.UserOrGroupId__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>true</isSourceFormula>
+        <sourceField xsi:nil="true"/>
+        <sourceFormula>IF(LEFT(sourceField[&apos;UserOrGroupId&apos;],3)==&apos;00G&apos;,sourceField[&apos;UserOrGroupId&apos;],&apos;&apos;)</sourceFormula>
+        <targetField>GroupMember_Home__dll.RelatedUserGroupId__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>System</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>true</isSourceFormula>
+        <sourceField xsi:nil="true"/>
+        <sourceFormula>&quot;Salesforce_Home&quot;</sourceFormula>
+        <targetField>GroupMember_Home__dll.DataSource__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>System</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>true</isSourceFormula>
+        <sourceField xsi:nil="true"/>
+        <sourceFormula>&quot;GroupMember&quot;</sourceFormula>
+        <targetField>GroupMember_Home__dll.DataSourceObject__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>GroupMember_Home.Id__c</sourceField>
+        <sourceFormula>Id</sourceFormula>
+        <targetField>GroupMember_Home__dll.Id__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>GroupMember_Home.GroupId__c</sourceField>
+        <sourceFormula>GroupId</sourceFormula>
+        <targetField>GroupMember_Home__dll.GroupId__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>GroupMember_Home.SystemModstamp__c</sourceField>
+        <sourceFormula>SystemModstamp</sourceFormula>
+        <targetField>GroupMember_Home__dll.SystemModstamp__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>GroupMember_Home.SfdcOrganizationId__c</sourceField>
+        <sourceFormula>SfdcOrganizationId</sourceFormula>
+        <targetField>GroupMember_Home__dll.SfdcOrganizationId__c</targetField>
+    </fieldSourceTargetMaps>
+    <masterLabel>GroupMember_Home_map_GroupMember_Home_1779199337507</masterLabel>
+    <sourceObjectName>GroupMember_Home</sourceObjectName>
+    <targetObjectName>GroupMember_Home__dll</targetObjectName>
+</ObjectSourceTargetMap>

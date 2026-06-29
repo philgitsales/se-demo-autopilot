@@ -25,3 +25,6 @@ venv/
 *secret*
 *.pem
 *.key
+
+# Upstream vendored repos (we extract what we need into skills/)
+sf-skills/

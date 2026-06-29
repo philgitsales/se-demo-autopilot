@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ObjectSourceTargetMap xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <creationType>Custom</creationType>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>Shipment_Data.Tracking_Number__c</sourceField>
+        <sourceFormula>Tracking Number</sourceFormula>
+        <targetField>Shipment_Data__dll.Tracking_Number__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>Shipment_Data.Shipment_Date__c</sourceField>
+        <sourceFormula>Shipment Date</sourceFormula>
+        <targetField>Shipment_Data__dll.Shipment_Date__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>Shipment_Data.Order_ID__c</sourceField>
+        <sourceFormula>Order ID</sourceFormula>
+        <targetField>Shipment_Data__dll.Order_ID__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>System</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>true</isSourceFormula>
+        <sourceField xsi:nil="true"/>
+        <targetField>Shipment_Data__dll.InternalOrganization__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>Shipment_Data.Destination_Address__c</sourceField>
+        <sourceFormula>Destination Address</sourceFormula>
+        <targetField>Shipment_Data__dll.Destination_Address__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>Shipment_Data.Shipment_Status__c</sourceField>
+        <sourceFormula>Shipment Status</sourceFormula>
+        <targetField>Shipment_Data__dll.Shipment_Status__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>System</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>true</isSourceFormula>
+        <sourceField xsi:nil="true"/>
+        <sourceFormula>env[&apos;filename&apos;]</sourceFormula>
+        <targetField>Shipment_Data__dll.DataSourceObject__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>Shipment_Data.Carrier__c</sourceField>
+        <sourceFormula>Carrier</sourceFormula>
+        <targetField>Shipment_Data__dll.Carrier__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>Shipment_Data.Shipment_ID__c</sourceField>
+        <sourceFormula>Shipment ID</sourceFormula>
+        <targetField>Shipment_Data__dll.Shipment_ID__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>System</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>true</isSourceFormula>
+        <sourceField xsi:nil="true"/>
+        <sourceFormula>&apos;AwsS3_AWS_Demo_Connector&apos;</sourceFormula>
+        <targetField>Shipment_Data__dll.DataSource__c</targetField>
+    </fieldSourceTargetMaps>
+    <fieldSourceTargetMaps>
+        <creationType>Custom</creationType>
+        <filterApplied>false</filterApplied>
+        <isSourceFormula>false</isSourceFormula>
+        <sourceField>Shipment_Data.Expected_Delivery_Date__c</sourceField>
+        <sourceFormula>Expected Delivery Date</sourceFormula>
+        <targetField>Shipment_Data__dll.Expected_Delivery_Date__c</targetField>
+    </fieldSourceTargetMaps>
+    <masterLabel>Shipment_Data_map_Shipment_Data_1779198180311</masterLabel>
+    <sourceObjectName>Shipment_Data</sourceObjectName>
+    <targetObjectName>Shipment_Data__dll</targetObjectName>
+</ObjectSourceTargetMap>

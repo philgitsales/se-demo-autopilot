@@ -1,0 +1,53 @@
+{
+  "_note": "These segments are LIVE in the org (all ACTIVE, 0 members until data streams sync)",
+  "_format_notes": {
+    "key_qualifier_required": "SELECT must include KQ_Id__c alongside the primary key",
+    "no_joins": "Segment SQL cannot JOIN to other DMOs",
+    "standard_dmos_only": "Custom DMOs like ContactProfile__dlm are not recognized by segment engine",
+    "materialized_columns_only": "Only columns returned by SELECT * FROM dmo LIMIT 1 are usable"
+  },
+  "segments": [
+    {
+      "displayName": "High Intent Web Visitors",
+      "developerName": "High_Intent_Web_Visitors",
+      "segmentOnApiName": "ssot__Individual__dlm",
+      "marketSegmentDefinitionId": "3HXg70000000a6jGAA",
+      "sql": "SELECT ssot__Individual__dlm.ssot__Id__c, ssot__Individual__dlm.KQ_Id__c FROM ssot__Individual__dlm"
+    },
+    {
+      "displayName": "Enterprise Decision Makers",
+      "developerName": "Enterprise_Decision_Makers",
+      "segmentOnApiName": "ssot__Individual__dlm",
+      "marketSegmentDefinitionId": "3HXg70000000a8LGAQ",
+      "sql": "SELECT ssot__Individual__dlm.ssot__Id__c, ssot__Individual__dlm.KQ_Id__c FROM ssot__Individual__dlm WHERE ssot__Individual__dlm.ssot__TitleName__c IS NOT NULL"
+    },
+    {
+      "displayName": "Titled Professionals",
+      "developerName": "Titled_Professionals",
+      "segmentOnApiName": "ssot__Individual__dlm",
+      "marketSegmentDefinitionId": "3HXg70000000aGPGAY",
+      "sql": "SELECT ssot__Individual__dlm.ssot__Id__c, ssot__Individual__dlm.KQ_Id__c FROM ssot__Individual__dlm WHERE ssot__Individual__dlm.ssot__TitleName__c IS NOT NULL AND ssot__Individual__dlm.ssot__LastName__c IS NOT NULL"
+    },
+    {
+      "displayName": "High Value Accounts",
+      "developerName": "High_Value_Accounts",
+      "segmentOnApiName": "ssot__Account__dlm",
+      "marketSegmentDefinitionId": "3HXg70000000aBZGAY",
+      "sql": "SELECT ssot__Account__dlm.ssot__Id__c, ssot__Account__dlm.KQ_Id__c FROM ssot__Account__dlm WHERE ssot__Account__dlm.ssot__AnnualRevenueAmount__c > 1000000"
+    },
+    {
+      "displayName": "Technology Industry",
+      "developerName": "Technology_Industry",
+      "segmentOnApiName": "ssot__Account__dlm",
+      "marketSegmentDefinitionId": "3HXg70000000aDBGAY",
+      "sql": "SELECT ssot__Account__dlm.ssot__Id__c, ssot__Account__dlm.KQ_Id__c FROM ssot__Account__dlm WHERE ssot__Account__dlm.ssot__PrimaryIndustry__c = 'Technology'"
+    },
+    {
+      "displayName": "Named Enterprise Accounts",
+      "developerName": "Named_Enterprise_Accounts",
+      "segmentOnApiName": "ssot__Account__dlm",
+      "marketSegmentDefinitionId": "3HXg70000000a9xGAA",
+      "sql": "SELECT ssot__Account__dlm.ssot__Id__c, ssot__Account__dlm.KQ_Id__c FROM ssot__Account__dlm WHERE ssot__Account__dlm.ssot__Name__c IS NOT NULL"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "displayName": "High Intent Web Visitors",
+  "developerName": "High_Intent_Web_Visitors",
+  "description": "Contacts who visited pricing, demo, or contact pages multiple times",
+  "segmentType": "Dbt",
+  "includeDbt": {
+    "models": {
+      "models": [
+        {
+          "name": "HighIntentVisitors",
+          "sql": "SELECT wa.RelatedContact_c_c__c FROM WebActivity_Home__dlm wa WHERE wa.PageVisited_c_c__c IN ('https://www.example.com/pricing', 'https://www.example.com/demo', 'https://www.example.com/contact') GROUP BY wa.RelatedContact_c_c__c HAVING COUNT(*) >= 2"
+        }
+      ]
+    }
+  }
+}

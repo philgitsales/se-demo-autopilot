@@ -1,0 +1,24 @@
+{
+  "_note": "This activation target is LIVE in the org (status: PROCESSING)",
+  "id": "85Ug70000022hsXEAQ",
+  "name": "Marketing_Cloud_S3_Bridge",
+  "platformType": "AmazonS3",
+  "dataSpaceName": "default",
+  "connector": {
+    "bucketName": "se-demo-autopilot-mc-segments",
+    "outputFormat": "JSON"
+  },
+  "status": "PROCESSING",
+  "createdDate": "2026-06-26T23:55:49.000Z",
+  "_next_steps": [
+    "Create activation linking segment to this target (blocked on 'Subject Config' field name)",
+    "Or: set up native Marketing Cloud activation target via UI",
+    "Or: replace with real S3 bucket credentials for actual data export"
+  ],
+  "_valid_platform_types": {
+    "AmazonS3": "needs connector.bucketName",
+    "SFTP": "needs connector details (unknown format)",
+    "GoogleCloudStorage": "needs connector details",
+    "AzureBlob": "needs connector details"
+  }
+}
