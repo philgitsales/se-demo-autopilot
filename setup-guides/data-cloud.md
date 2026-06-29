@@ -3,17 +3,23 @@
 > **What this does**: Ingests CRM data into Data Cloud, harmonizes it into unified profiles,
 > and creates targetable segments. These segments can then be activated to Marketing Cloud
 > (see `data-cloud-to-marketing-cloud.md`) or other destinations.
+> **Status**: FULLY WORKING in phil_master_sdo — all 7 steps proven end-to-end
 
 ---
 
 ## Overview
 
 ```
-CRM Objects → Data Streams → DLOs → DMO Mappings → Unified DMOs → Segments
-     (1)          (2)         (3)        (4)            (5)          (6)
+CRM Objects → Data Streams → DLOs → DMO Mappings → Identity Resolution → Unified Profiles → Segments → Calculated Insights
+     (1)          (2)         (3)        (4)               (5)                (6)              (7)            (7b)
 ```
 
-The pipeline has 6 phases. Most are programmatic, but data stream sync requires one UI click.
+The pipeline has 7 steps. Most are programmatic, but data stream sync requires one UI click.
+
+**Related guides:**
+- [identity-resolution.md](identity-resolution.md) — Deep dive on IDR setup, match rules, troubleshooting
+- [calculated-insights.md](calculated-insights.md) — Deep dive on CI creation and SQL patterns
+- [data-cloud-to-marketing-cloud.md](data-cloud-to-marketing-cloud.md) — Activating segments to MC
 
 ---
 
@@ -247,69 +253,113 @@ sf data360 query sql -o <org> --sql 'SELECT * FROM "ssot__Individual__dlm" LIMIT
 
 ---
 
-## Step 5: Identity Resolution (API — programmatic, optional)
+## Step 5: Identity Resolution (API — fully programmatic)
 
-**What**: Merges duplicate records into unified profiles. Required for accurate segment counts.
+**What**: Links records from multiple sources into unified profiles. Creates a unified identity graph that powers accurate segments and activations.
 
-### Check if IR is configured:
+> **Full deep-dive**: See [identity-resolution.md](identity-resolution.md) for match types, reconciliation options, and troubleshooting.
+
+### Check if IR is already configured:
 ```bash
-sf data360 identity-resolution list -o <org> 2>/dev/null
+sf api request rest "/services/data/v66.0/ssot/identity-resolutions" -o <org> 2>/dev/null
+# Empty "identityResolutions": [] means none configured yet
 ```
 
-### Create an IR ruleset:
-```bash
-sf data360 identity-resolution create -o <org> -f ir-ruleset.json 2>/dev/null
-```
+### Create an IR ruleset (USE REST API — NOT the CLI):
 
-### IR ruleset template (match on email):
-```json
-{
+**WARNING**: `sf data360 identity-resolution create` has a bug where it uses `${suffix}` as a literal string in the rulesetId. Use the REST API directly.
+
+```bash
+sf api request rest "/services/data/v66.0/ssot/identity-resolutions" -o <org> --method POST --body '{
   "label": "Main",
-  "description": "Match on email address",
+  "description": "Primary identity resolution - email and phone matching",
   "configurationType": "individual",
-  "rulesetId": "main",
-  "doesRunAutomatically": false,
+  "doesRunAutomatically": true,
   "matchRules": [
     {
       "label": "Exact Email",
-      "criteria": [
-        {
-          "entityName": "ssot__ContactPointEmail__dlm",
-          "fieldName": "ssot__EmailAddress__c",
-          "matchMethodType": "exactnormalized",
-          "caseSensitiveMatch": false,
-          "shouldMatchOnBlank": false
-        }
-      ]
+      "criteria": [{
+        "entityName": "ssot__ContactPointEmail__dlm",
+        "fieldName": "ssot__EmailAddress__c",
+        "matchMethodType": "exactnormalized",
+        "caseSensitiveMatch": false,
+        "shouldMatchOnBlank": false
+      }]
+    },
+    {
+      "label": "Exact Phone",
+      "criteria": [{
+        "entityName": "ssot__ContactPointPhone__dlm",
+        "fieldName": "ssot__FormattedE164PhoneNumber__c",
+        "matchMethodType": "exactnormalized",
+        "caseSensitiveMatch": false,
+        "shouldMatchOnBlank": false
+      }]
     }
   ],
-  "reconciliationRules": [
-    {
-      "entityName": "ssot__Individual__dlm",
-      "ruleType": "lastupdated",
-      "shouldIgnoreEmptyValue": true,
-      "sources": [],
-      "fields": []
-    }
-  ]
-}
+  "reconciliationRules": [{
+    "entityName": "ssot__Individual__dlm",
+    "ruleType": "lastupdated",
+    "shouldIgnoreEmptyValue": true,
+    "sources": [],
+    "fields": []
+  }]
+}' 2>/dev/null
 ```
 
-### Run IR:
+**What happens automatically after creation:**
+1. System runs IDR immediately (status goes PUBLISHING → PUBLISHED)
+2. Creates unified DMOs: `UnifiedIndividual__dlm`, `UnifiedContactPointEmail__dlm`, etc.
+3. Creates identity link DMOs: `IndividualIdentityLink__dlm`, etc.
+4. Auto-adds reconciliation rules for ALL mapped contact point DMOs (even if you only specify Individual)
+
+### Run IR manually (if `doesRunAutomatically` is false, or to force a re-run):
 ```bash
-sf data360 identity-resolution run -o <org> --name Main 2>/dev/null
+sf data360 identity-resolution run -o <org> --name Main
+# Output: "Identity resolution job started."
+```
+
+### Update the ruleset (add/change match rules):
+```bash
+# MUST use PATCH, NOT PUT. MUST NOT include configurationType.
+sf api request rest "/services/data/v66.0/ssot/identity-resolutions/<RULESET_ID>" -o <org> --method PATCH --body '{
+  "label": "Main",
+  "description": "Updated description",
+  "doesRunAutomatically": true,
+  "matchRules": [...],
+  "reconciliationRules": [...]
+}' 2>/dev/null
 ```
 
 ### How to verify:
 ```bash
-# Check unified profile count
-sf data360 query sql -o <org> --sql 'SELECT COUNT(*) FROM "UnifiedssotIndividualMain__dlm"' 2>/dev/null
+# Check ruleset status and stats
+sf api request rest "/services/data/v66.0/ssot/identity-resolutions/<RULESET_ID>" -o <org> 2>/dev/null
+# Look for: rulesetStatus=PUBLISHED, lastJobStatus=SUCCESS, totalUnifiedProfiles > 0
+
+# Query unified profiles
+sf api request rest "/services/data/v64.0/ssot/query" -o <org> --method POST --body '{"sql": "SELECT COUNT(*) FROM UnifiedIndividual__dlm"}' 2>/dev/null
+
+# Check identity links (source → unified mapping)
+sf api request rest "/services/data/v64.0/ssot/query" -o <org> --method POST --body '{"sql": "SELECT SourceRecordId__c, UnifiedRecordId__c FROM IndividualIdentityLink__dlm LIMIT 5"}' 2>/dev/null
 ```
 
+### Match Method Types:
+| Type | Best for | Example |
+|------|----------|---------|
+| `exact` | IDs, codes | Exact character match |
+| `exactnormalized` | Email, phone | Lowercase + trim whitespace first |
+| `fuzzy` | Names with typos | Levenshtein-like tolerance |
+| `normalized` | Names, addresses | Applies transformation rules |
+
 ### Pitfalls:
-- IR requires ContactPointEmail data to exist (needs Contact.Email mapped to ssot__ContactPointEmail__dlm)
-- IR runs are asynchronous — wait and re-check
-- If no email data exists yet, skip this step; segments still work on non-unified DMOs
+- **DO NOT use `sf data360 identity-resolution create`** — has `${suffix}` bug. Use REST API.
+- **PATCH rejects `configurationType`** — omit it from update payloads
+- **GET by name doesn't work** — must use the ID (e.g., `1irg70000000Wg0AAE`)
+- IR requires ContactPointEmail (or Phone/Address) data mapped with `PartyId` → Individual relationship
+- If no contact point data exists, skip IDR — segments still work on non-unified DMOs
+- Consolidation rate = 0% is expected with single-source data (no duplicates to merge)
+- With `doesRunAutomatically: true`, IDR re-runs after each data ingestion
 
 ---
 
@@ -376,6 +426,48 @@ sf api request rest "/services/data/v64.0/ssot/segments" -o <org> 2>/dev/null
 
 ---
 
+## Step 7 (Optional): Calculated Insights (API — fully programmatic)
+
+**What**: Computed metrics aggregated from DMO data. Think materialized SQL views that produce per-entity scores, counts, or sums.
+
+> **Full deep-dive**: See [calculated-insights.md](calculated-insights.md) for examples, SQL patterns, and troubleshooting.
+
+### Create a Calculated Insight:
+```bash
+sf api request rest "/services/data/v66.0/ssot/calculated-insights" -o <org> --method POST --body '{
+  "apiName": "Web_Engagement_Score",
+  "displayName": "Web Engagement Score",
+  "description": "Counts web activities per contact",
+  "definitionType": "CALCULATED_METRIC",
+  "expression": "SELECT WebActivity_Home__dlm.RelatedContact_c_c__c AS contact_id__c, COUNT(WebActivity_Home__dlm.Id_c__c) AS visit_count__c FROM WebActivity_Home__dlm GROUP BY WebActivity_Home__dlm.RelatedContact_c_c__c",
+  "publishScheduleInterval": "0"
+}' 2>/dev/null
+```
+
+### Run it:
+```bash
+sf data360 calculated-insight run -o <org> --name Web_Engagement_Score__cio
+```
+
+### Query results:
+```bash
+sf api request rest "/services/data/v64.0/ssot/query" -o <org> --method POST --body '{"sql": "SELECT * FROM Web_Engagement_Score__cio LIMIT 10"}' 2>/dev/null
+```
+
+### Critical rules:
+- `publishScheduleInterval` is REQUIRED — use `"0"` for on-demand (avoids the broken schedule start date field)
+- Column aliases MUST end in `__c` (e.g., `visit_count__c`)
+- System auto-appends `__cio` suffix to the apiName
+- The CLI `run` command requires the full name with `__cio` suffix
+- JOINs ARE supported in CI expressions (unlike segment SQL)
+
+### Pitfalls:
+- Scheduled CIs (`publishScheduleInterval` > 0) cannot be created via API — the schedule start date field name is undocumented
+- Results take 1-5 minutes to materialize after running
+- Empty results after run = still processing, wait and retry query
+
+---
+
 ## DMO Column Reference (materialized fields only)
 
 These are the ACTUAL queryable columns. Not all defined DMO fields are materialized.
@@ -437,6 +529,26 @@ Data Space:                   default
 DataSpaceId:                  0vhg70000002SZhAAM
 Admin FieldPermissions Parent: 0PSg7000003mQaxGAE
 CRM Connection Name:          SalesforceDotCom_Home
+
+Identity Resolution:
+  Ruleset ID:                 1irg70000000Wg0AAE
+  Ruleset Name:               Main
+  Status:                     PUBLISHED (auto-runs on ingestion)
+  Unified Profiles:           2,126
+  Match Rules:                Exact Email + Exact Phone
+
+Calculated Insights:
+  Web_Engagement_Score__cio   2,058 contacts with web engagement data
+  High_Intent_Page_Visits__cio  942 contacts with high-intent visits
+
+DMO Record Counts:
+  ssot__Individual__dlm:          2,126
+  ssot__Account__dlm:             902
+  ssot__ContactPointEmail__dlm:   2,126
+  ssot__ContactPointPhone__dlm:   3,028
+  ssot__ContactPointAddress__dlm: 3,028
+  WebActivity_Home__dlm:          8,001
+  UnifiedIndividual__dlm:         2,126
 ```
 
 ---
@@ -447,6 +559,12 @@ CRM Connection Name:          SalesforceDotCom_Home
 |-------|-------|-----|
 | `"Connector type SalesforceDotCom is not allowed to run in non-interactive mode"` | Trying to sync SFDC streams programmatically | Must use UI (Step 3) |
 | `"Object not found"` in segment SQL | Using a custom DMO or wrong table name | Use only standard DMOs (`ssot__Account__dlm`, `ssot__Individual__dlm`) |
+| `Ruleset ID '${suffix}' is already in use` | CLI `sf data360 identity-resolution create` bug | Use REST API directly (POST `/ssot/identity-resolutions`) |
+| `Unrecognized field "configurationType"` | Including `configurationType` in PATCH/PUT to IDR | Only use in POST (create). Omit from PATCH (update) |
+| `Identity Resolution not found: Main` | GET by name doesn't work | Use GET by ID (the `1irg...` record ID) |
+| `Schedule start date is required` | CI with `publishScheduleInterval` > "0" | Use `"0"` for on-demand, then run manually |
+| `Calculated Insight api name must end in __cio` | Using base name in CLI run command | Append `__cio`: `--name My_Name__cio` |
+| `METHOD_NOT_ALLOWED` on IDR PUT | Tried PUT instead of PATCH | Use PATCH for IDR updates |
 | Segment has 0 members | DMO has no data | Complete Step 3 (UI sync) |
 | `"Couldn't find CDP tenant ID"` | Query-plane not ready or Data Cloud not provisioned | Run org diagnostic, wait, or check provisioning |
 | Stream creation succeeds but DLO has 0 rows | Stream was never synced | Go to UI and click Run |
@@ -472,6 +590,7 @@ CRM Connection Name:          SalesforceDotCom_Home
 sf data360 data-stream list -o <org> 2>/dev/null
 sf data360 dmo list -o <org> 2>/dev/null
 sf data360 segment list -o <org> 2>/dev/null
+sf api request rest "/services/data/v66.0/ssot/identity-resolutions" -o <org> 2>/dev/null
 
 # 2. Create stream from CRM object
 sf data360 data-stream create-from-object -o <org> --object Account --connection SalesforceDotCom_Home 2>/dev/null
@@ -479,12 +598,29 @@ sf data360 data-stream create-from-object -o <org> --object Account --connection
 # 3. [MANUAL] Go to UI → Data Streams → Run
 
 # 4. Verify data flowed
-sf data360 query sql -o <org> --sql 'SELECT COUNT(*) FROM "ssot__Individual__dlm"' 2>/dev/null
+sf api request rest "/services/data/v64.0/ssot/query" -o <org> --method POST --body '{"sql": "SELECT COUNT(*) FROM ssot__Individual__dlm"}' 2>/dev/null
+sf api request rest "/services/data/v64.0/ssot/query" -o <org> --method POST --body '{"sql": "SELECT COUNT(*) FROM ssot__ContactPointEmail__dlm"}' 2>/dev/null
 
-# 5. Create segment
+# 5. Create Identity Resolution (REST API — NOT CLI)
+sf api request rest "/services/data/v66.0/ssot/identity-resolutions" -o <org> --method POST --body '{
+  "label": "Main", "configurationType": "individual", "doesRunAutomatically": true,
+  "matchRules": [{"label": "Exact Email", "criteria": [{"entityName": "ssot__ContactPointEmail__dlm", "fieldName": "ssot__EmailAddress__c", "matchMethodType": "exactnormalized", "caseSensitiveMatch": false, "shouldMatchOnBlank": false}]}],
+  "reconciliationRules": [{"entityName": "ssot__Individual__dlm", "ruleType": "lastupdated", "shouldIgnoreEmptyValue": true, "sources": [], "fields": []}]
+}' 2>/dev/null
+
+# 6. Create segment
 sf data360 segment create -o <org> -f segment.json --api-version 64.0 2>/dev/null
 sf data360 segment publish -o <org> --name My_Segment 2>/dev/null
-
-# 6. Check count
 sf data360 segment count -o <org> --name My_Segment 2>/dev/null
+
+# 7. Create Calculated Insight (on-demand)
+sf api request rest "/services/data/v66.0/ssot/calculated-insights" -o <org> --method POST --body '{
+  "apiName": "My_Insight", "displayName": "My Insight", "definitionType": "CALCULATED_METRIC",
+  "expression": "SELECT dim AS dim__c, COUNT(field) AS cnt__c FROM some_dmo__dlm GROUP BY dim",
+  "publishScheduleInterval": "0"
+}' 2>/dev/null
+sf data360 calculated-insight run -o <org> --name My_Insight__cio
+
+# 8. Verify unified profiles
+sf api request rest "/services/data/v64.0/ssot/query" -o <org> --method POST --body '{"sql": "SELECT COUNT(*) FROM UnifiedIndividual__dlm"}' 2>/dev/null
 ```
