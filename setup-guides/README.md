@@ -5,15 +5,28 @@
 
 ---
 
+## Getting Started
+
+| Guide | Status | Description |
+|-------|--------|-------------|
+| [salesforce-cli-setup.md](salesforce-cli-setup.md) | ✅ Fully working | Install SF CLI + authenticate to your SDO org |
+
 ## Configured Platforms
 
 | Platform | Guide | Status | Manual Steps |
 |----------|-------|--------|--------------|
 | Data Cloud | [data-cloud.md](data-cloud.md) | ✅ Fully working | 1 (data stream sync) |
+| Identity Resolution | [identity-resolution.md](identity-resolution.md) | ✅ Fully working | 0 (fully programmatic) |
+| Calculated Insights | [calculated-insights.md](calculated-insights.md) | ✅ Fully working | 0 (fully programmatic) |
 | Data Cloud → Marketing Cloud | [data-cloud-to-marketing-cloud.md](data-cloud-to-marketing-cloud.md) | ✅ Fully working | 1 (MC Connection OAuth) |
 | Marketing Cloud REST API | [marketing-cloud-api.md](marketing-cloud-api.md) | ✅ Fully working | 0 (API credentials only) |
-
 | Marketing Cloud Advanced | [marketing-cloud-advanced.md](marketing-cloud-advanced.md) | 🟡 Licenses active, configuring | 6 (data kits install, scoring, perf install, Einstein toggles, data graph link) |
+
+## Agent Tooling
+
+| Tool | Guide | Status | Notes |
+|------|-------|--------|-------|
+| **Salesforce Docs Retrieval** | [salesforce-docs-retrieval.md](salesforce-docs-retrieval.md) | ✅ Fully working | READ THIS before fetching any SF documentation — article IDs are NOT guessable |
 
 ## Pending Platforms
 
