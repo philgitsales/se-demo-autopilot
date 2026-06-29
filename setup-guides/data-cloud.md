@@ -498,9 +498,15 @@ ssot__PrimaryIndustry__c, ssot__SalesPhoneId__c, ssot__WebsiteAddr__c
 
 ### To discover columns on any DMO:
 ```bash
+# Option A: CLI (sometimes fails with "query failed" on complex tables)
 sf data360 query sql -o <org> --sql 'SELECT * FROM "<dmo_name>" LIMIT 1' 2>/dev/null
-# The metadata in the response shows the real column list
+
+# Option B: REST API (more reliable — always use this if Option A fails)
+sf api request rest "/services/data/v64.0/ssot/query" -o <org> --method POST --body '{"sql": "SELECT * FROM <dmo_name> LIMIT 1"}' 2>/dev/null
+# The "metadata" key in the response shows the real column list with types
 ```
+
+**Note**: The REST endpoint (`/ssot/query` POST with `{"sql": "..."}`) does NOT require quotes around table names, unlike the CLI which needs double-quotes. Both work with standard SQL syntax.
 
 ---
 
