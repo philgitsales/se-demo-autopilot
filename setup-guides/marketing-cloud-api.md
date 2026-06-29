@@ -88,7 +88,10 @@ SOAP:  https://<SUBDOMAIN>.soap.marketingcloudapis.com/Service.asmx
 
 ---
 
-## Key IDs (this org)
+## Example: Key IDs (reference org)
+
+> ⚠️ **These are examples from a reference org.** Your org will have different values.
+> Use the "Discovering Key IDs" section above to find yours.
 
 ```
 MC Subdomain:                 mcmn8m8yvnsgn6fnl3jft2xmc6s4
@@ -107,9 +110,37 @@ Tracking DE GUID:             6B0A9921-BA6D-4BCB-8FB9-03A9EDBC8816
 | Silent error 30000 on journey creation | Name/description contains `& < > " ' /` | Remove special characters |
 | Error 30000 on journey activities | Activity has a `description` field set | OMIT description from activities, goals, exits |
 | Email not sendable | Created as type 208 (htmlemail) | Must be type 207 (templatebasedemail) with `data.email` block |
-| Send definition fails | Wrong list format or missing DE GUID | Use `"All Subscribers - 466907"` and include `dataExtension` GUID |
-| Folder creation fails | Using parentId 0 | Use `466941` for root Content Builder |
+| Send definition fails | Wrong list format or missing DE GUID | Use `"All Subscribers - <LIST_ID>"` format and include `dataExtension` GUID (see "Discovering Key IDs" below) |
+| Folder creation fails | Using parentId 0 | Use the root Content Builder folder ID (see "Discovering Key IDs" below) |
 | Event fire type mismatch | Numbers sent as strings | Match exact DE field types (numbers as numbers) |
+
+---
+
+## Discovering Key IDs (per org)
+
+Every MC org has its own IDs. Run these to find yours:
+
+```bash
+# Get All Subscribers list ID
+# (SOAP Retrieve on List object, filter by ListName = "All Subscribers")
+# The ID appears in the response as <ID>XXXXXX</ID>
+
+# Get root Content Builder folder ID
+curl -s "https://<SUBDOMAIN>.rest.marketingcloudapis.com/asset/v1/content/categories?$filter=parentId%20eq%200" \
+  -H "Authorization: Bearer $TOKEN"
+# Look for the folder with name "Content Builder" — its ID is your root folder
+
+# Get a Data Extension's GUID (needed for send definitions)
+# Use SOAP Retrieve on DataExtension, filter by Name
+```
+
+### Example values (from a reference org — YOUR org will differ):
+```
+All Subscribers List ID:      466907    (format in send defs: "All Subscribers - 466907")
+Root Content Builder Folder:  466941    (use as parentId when creating folders/assets)
+Custom Assets Folder:         716404    (created by agent, use for demo content)
+Tracking DE GUID:             6B0A9921-BA6D-4BCB-8FB9-03A9EDBC8816
+```
 
 ---
 

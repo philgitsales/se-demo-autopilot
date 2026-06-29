@@ -232,15 +232,21 @@ curl -s "https://mcmn8m8yvnsgn6fnl3jft2xmc6s4.rest.marketingcloudapis.com/platfo
 
 ## Rules for Agents Working on This Project
 
+### THE MOST IMPORTANT RULE:
+
+**UPDATE `setup-guides/` WITH EVERY DISCOVERY.** This project is a living system. When you fix something, discover a pitfall, find a workaround, or prove a new API pattern — update the relevant setup guide IMMEDIATELY. The goal is that someone else can take this repo, follow the guides, and get everything working without hitting the same walls we did. If a guide doesn't exist for what you're working on, CREATE ONE following the format in `setup-guides/README.md`. These guides are the product — the code is secondary.
+
+---
+
 1. **NEVER commit or expose credentials** — They're in `config/.env` which is gitignored
-2. **Read the two guide docs first** before making API calls — they contain all the gotchas
+2. **Read `setup-guides/` first** before starting work on any platform — they contain proven workflows and pitfalls
 3. **Read `SKILLS.md`** for Data Cloud CLI commands, templates, and phase-by-phase reference — it has everything you need for `sf data360` operations
 4. **Read `AGENTS.md`** for the full inventory of 28 installed Salesforce skills and how to use them
 5. **Test against the SDO freely** — it's a demo org, nothing is production
 6. **Journey names**: No `& < > " ' /` characters
 7. **Emails for sending**: Always type 207 with full `data.email` block
-8. **When something fails**: Check the guides' "Common Errors" sections first
-9. **Update the guides** when you discover new information
+8. **When something fails**: Check the setup guides' troubleshooting tables first
+9. **When you discover something new**: Update the relevant setup guide (or create one). Add it to the troubleshooting table, the pitfalls section, or the key IDs. Do NOT leave knowledge only in chat history.
 10. **Keep demo content professional** — Use realistic brand names (NTO, Cumulus Financial, etc.)
 11. **For Data Cloud work**: Use `sf data360` CLI commands documented in `SKILLS.md`. Run the org diagnostic first: `node skills/data360-orchestrate/scripts/diagnose-org.mjs -o phil_master_sdo --json`
 12. **Skill deep-dives**: Individual skill SKILL.md files in `skills/` have detailed workflows, gotchas, and output formats
