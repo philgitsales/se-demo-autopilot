@@ -373,57 +373,85 @@ sf api request rest "/services/data/v66.0/ssot/identity-resolutions" -o phil_mas
 
 ---
 
-### Step 6: Create Data Graph (API — programmatic)
+### Step 6: Create Data Graph (UI — browser automation required)
 
-**Status**: NOT DONE
-
-**Why programmatic**: `sf data360 data-graph create` CLI exists. However, the full MCA Data Graph needs specific field selections. May need UI enhancement after initial creation.
-
-**Skill**: `data360-harmonize`
+**Status**: ❌ BLOCKED — API has server-side bug (NPE). Must use browser automation.
 
 **Prerequisite**: Step 5 complete (Unified Individual exists)
 
-### Create Data Graph:
-```bash
-sf data360 data-graph create -o phil_master_sdo -f data-graph-marketing.json 2>/dev/null
-```
+**Why browser automation**: The SSOT Data Graph API (`POST /ssot/data-graphs`) has a confirmed server-side null pointer exception bug for `type: 1` (batch) graphs. The CLI `sf data360 data-graph create` passes through to this broken API. The only working path is UI creation.
 
-### Data Graph definition:
+### API Findings (DO NOT RE-ATTEMPT — confirmed broken 2026-06-30):
+
+The correct field names for the API were reverse-engineered by probing:
 ```json
 {
-  "developerName": "Marketing_Content_Personalization",
-  "displayName": "Marketing Content Personalization",
-  "description": "Data Graph for MCA merge fields and dynamic content",
+  "label": "Marketing Content Personalization",
+  "name": "Mktg_Content_Personal",
+  "dataspaceName": "default",
+  "type": 1,
+  "primaryObjectName": "UnifiedIndividual__dlm",
   "sourceObject": {
-    "name": "UnifiedssotIndividualMCAI__dlm",
-    "type": "derived",
-    "fields": [
-      {"name": "ssot__Id__c"},
-      {"name": "ssot__FirstName__c"},
-      {"name": "ssot__LastName__c"},
-      {"name": "ssot__Salutation__c"},
-      {"name": "ssot__BirthDate__c"}
-    ],
+    "name": "UnifiedIndividual__dlm",
+    "fields": [{"sourceFieldName": "ssot__Id__c"}],
     "relatedObjects": []
   }
 }
 ```
 
-### Verify:
-```bash
-sf data360 data-graph get -o phil_master_sdo --name Marketing_Content_Personalization 2>/dev/null
-```
+**What was discovered**:
+| Field | Correct Key | Notes |
+|-------|-------------|-------|
+| Graph label | `label` | Display name |
+| Graph API name | `name` | Max 30 characters |
+| Data space | `dataspaceName` | NOT `dataSpaceName` (capital S fails!) |
+| Graph type | `type` | Integer: 0=realtime, 1=batch. String values rejected. |
+| Root entity | `primaryObjectName` | DMO API name |
+| Source object name | `sourceObject.name` | Same DMO API name |
+| Field selector | `sourceFieldName` | Inside field objects array |
+
+**What DOES NOT work (confirmed rejects)**:
+- `developerName`, `displayName`, `apiName` → "Unrecognized field"
+- `dataSpaceName` (capital S) → "Unrecognized field"
+- `type: "INDIVIDUAL"` or any string → "Value does not match expected type"
+- Field objects with `name`, `fieldName`, `apiName` → "Unrecognized field"
+- Type 1 always returns `INTERNAL_ERROR: null` (Java NPE in `CdpDataGraphSourceInputRepresentation.getFields().stream()`)
+- Type 0 requires `prefetchPreference` but that field name is unknown
+
+### Browser Automation Fallback (RECOMMENDED):
+
+**UI Path**: Data Cloud app → Data Graphs tab → New → Start From Scratch
+
+**Alternative path**: Setup → Marketing Cloud → Assisted Setup → Reporting and Optimization → Customer Engagement (may have "Configure Basic Personalization" with Data Graph dropdown)
+
+**Steps for agent**:
+1. Get front-door URL: `sf org open -o phil_master_sdo --url-only`
+2. Navigate to Data Cloud app (try `/lightning/o/DataGraph/home` or use App Launcher → "Data Cloud")
+3. Look for "Data Graphs" tab or "New Data Graph" button
+4. Create from scratch:
+   - Root entity: `UnifiedIndividual__dlm` (from IR ruleset "Main")
+   - Select fields: `ssot__Id__c`, `ssot__FirstName__c`, `ssot__LastName__c`, `ssot__Salutation__c`, `ssot__BirthDate__c`
+   - No related objects needed for basic personalization
 
 ### Then enable in Basic Settings (UI):
-1. Setup → Reporting and Optimization → Customer Engagement
+1. Setup → Marketing Cloud → Assisted Setup → Reporting and Optimization → Customer Engagement
 2. Check "Configure Basic Personalization"
 3. Select the Data Graph from dropdown
 
+### Verify:
+```bash
+sf data360 data-graph metadata -o phil_master_sdo 2>/dev/null
+# Should show the graph name and status
+```
+
 ### Pitfalls:
+- **API is BROKEN** for type 1 graphs — do not waste time retrying programmatic creation
 - Data Graph requires Unified Individual to exist (Step 5 must complete first)
+- The correct unified DMO name is `UnifiedIndividual__dlm` (from IR "Main" ruleset reconciliation rules)
+- `name` field max 30 characters
 - The graph refresh is ~30 minutes by default (configurable to daily/weekly)
 - Full MCA personalization needs the graph linked in Basic Settings (UI step after creation)
-- If CLI creation fails, fall back to UI: Setup → Data Graphs → New → Start From Scratch
+- The Data Graph UI page might not have a direct Setup URL slug — navigate via App Launcher or the Data Cloud app
 
 ---
 
@@ -666,10 +694,18 @@ The agent completed Steps 1-4 with ZERO human UI interaction. Here's exactly how
 - **Key finding**: The button says "Update" (not "Install") even for first-time deployment
 - **Key finding**: The Data Kits listed are: Sales Data Kit, Marketing Setup Objects Data Kit, Marketing Setup Objects, SMS Objects
 
-#### Steps 5-6: Identity Resolution + Data Graph — PROGRAMMATIC (SF CLI)
-- **Method**: `sf data360 identity-resolution create` and `sf data360 data-graph create`
-- **Status**: Waiting for Step 4 to complete
-- **Prerequisite**: Data Kits must be fully deployed before these work
+#### Step 5: Identity Resolution — FULLY PROGRAMMATIC (SF CLI + browser for Basic Settings)
+- **Method**: `sf api request rest "/services/data/v66.0/ssot/identity-resolutions" --method POST`
+- **Status**: ✅ COMPLETE — Individual "Main" (2,126 profiles, SUCCESS) + Account "AccountMain" (902 profiles, SUCCESS)
+- **Key finding**: Individual IR ruleset "Main" was already created during Data Cloud setup — it was auto-detected by the Basic Settings page
+- **Key finding**: Account IR requires `rulesetId` max 4 chars (e.g., "Acct") and `matchMethodType: "exact"` (NOT `exactnormalized` for account name fields)
+- **Browser step**: After IR runs successfully, navigate to Basic Settings → Configure Identity Resolution Rulesets section → select both unified objects from dropdowns
+
+#### Step 6: Data Graph — BLOCKED (API broken, needs browser automation)
+- **Method attempted**: `sf data360 data-graph create` CLI + direct SSOT REST API
+- **Status**: ❌ BLOCKED — Server-side NPE bug in `/ssot/data-graphs` POST endpoint
+- **Fallback**: Must use browser automation to create via UI (Data Cloud app → Data Graphs → New)
+- **Key finding**: The correct API field names were reverse-engineered (see Step 6 section above) but the server crashes with `INTERNAL_ERROR: null` regardless of payload for type 1 graphs
 
 ---
 
@@ -681,8 +717,8 @@ The agent completed Steps 1-4 with ZERO human UI interaction. Here's exactly how
 | 2. Permission Sets | NO | YES | `sf org assign permset` CLI |
 | 3. Enable Marketing Cloud | NO | YES | Browser automation (MCP) |
 | 4. Deploy Data Kits | NO | YES | Browser automation (MCP) |
-| 5. Identity Resolution | NO | YES | `sf data360` CLI |
-| 6. Data Graph | NO | YES | `sf data360` CLI |
+| 5. Identity Resolution | NO | YES | `sf api request rest` + browser for Basic Settings |
+| 6. Data Graph | NO | YES (browser) | ❌ API broken — browser automation required |
 | 7. Scoring Rules | NO | LIKELY YES | Browser automation (MCP) — TBD |
 | 8. Marketing Performance | NO | LIKELY YES | Browser automation (MCP) — TBD |
 | 9. Einstein Features | NO | LIKELY YES | Browser automation (MCP) — TBD |
@@ -704,6 +740,78 @@ For the agent to perform UI steps, it needs:
 
 ---
 
+### Browser Automation Tips and Tricks (Learned the Hard Way)
+
+These are critical lessons for any agent doing Salesforce UI automation:
+
+#### 1. NEVER guess URLs — always navigate via the sidebar tree
+Salesforce Setup page URLs are NOT predictable. Patterns like `/lightning/setup/CdpDataGraph/home` or `/lightning/setup/MCAdvancedBasicSettings/home` do NOT work. **Always**:
+1. Navigate to Setup Home: `https://<INSTANCE>.lightning.force.com/lightning/setup/SetupOneHome/home`
+2. Find the Quick Find searchbox OR expand the left sidebar tree
+3. Click through the tree hierarchy to reach your target page
+
+#### 2. Use the accessibility tree, not screenshots, for navigation
+- `browser_a11y_tree` with `query` parameter is the fastest way to find clickable elements
+- Screenshots are for visual confirmation ONLY — don't use them to find elements
+- Tree items have `backendDOMNodeId` — use these for `browser_click`
+- Use `root_id` parameter to drill into a subtree without loading the full page tree
+
+#### 3. The Setup sidebar tree structure (confirmed 2026-06-30)
+```
+Platform Tools
+  └── Marketing Cloud
+      └── Assisted Setup
+          ├── Assistant Home
+          ├── Basic Settings          ← IR, Data Kits, Enable MC
+          ├── Channels
+          ├── Einstein & Agentforce
+          ├── Marketing Cloud Engagement
+          ├── Reporting and Optimization  ← Scoring Rules, Data Graph personalization
+          └── User Access
+      └── Marketing Features          ← Marketing Performance install
+  └── Data Cloud                      ← Data Graphs might live here
+  └── Personalization                 ← May also have Data Graph config
+```
+
+#### 4. Quick Find searchbox has two IDs — use the RIGHT one
+The Setup page has TWO search boxes:
+- "Search Setup" (top bar, combobox role) — searches ALL of Setup globally
+- "Quick Find" (left sidebar, searchbox role) — filters the sidebar tree only
+Use the sidebar Quick Find (role: `searchbox`, name: `Quick Find`) to filter the tree. Use its `backendDOMNodeId` (changes per page load — always re-query with `browser_a11y_tree`).
+
+#### 5. Front-door URLs expire
+- `sf org open --url-only` generates a one-time-use OTP URL
+- If the browser session expires (hours of inactivity), you MUST generate a NEW front-door URL
+- After navigating to the front-door URL, wait for redirect to `lightning.force.com` domain before proceeding
+- Navigation to `.my.salesforce.com` after login may cause ERR_ABORTED — always use the Lightning domain: `https://<INSTANCE>.lightning.force.com/...`
+
+#### 6. Page load timing
+- After clicking a Setup tree item, the right panel loads asynchronously
+- Use `browser_wait` with a `selector` matching expected content (e.g., `"Basic Settings"`)
+- Set timeout to 10-15 seconds — some Setup pages are slow
+- If timeout hits, check `browser_a11y_tree` — the content may have loaded but under a different label
+
+#### 7. The "Page not found" trap
+If you navigate directly to a Setup URL slug and get "Page not found":
+- The page either doesn't exist in this org/edition
+- Or the URL slug is wrong (Salesforce changes these between releases)
+- **NEVER keep guessing URL variations** — go back to Setup Home and navigate via the tree
+- Use Quick Find to search for the feature name in the sidebar
+
+#### 8. Accessibility tree quirks with Salesforce
+- "Not Started" / "Not Deployed" text in a11y tree may be stale — always verify with a screenshot
+- Green checkmarks show as "Completed" in heading roles
+- Buttons inside collapsible sections may not appear in the tree until the section is expanded
+- Lightning components load lazily — wait 2-3 seconds after navigation before querying the tree
+
+#### 9. Instance domain format
+- Setup pages: `https://<INSTANCE>.lightning.force.com/lightning/setup/<SLUG>/home`
+- App pages: `https://<INSTANCE>.lightning.force.com/lightning/o/<OBJECT>/home`  
+- This org's instance: `storm-e3b3a339aa547e`
+- NEVER navigate to `.my.salesforce.com` URLs after login — they redirect and may fail
+
+---
+
 ## Troubleshooting
 
 | Error | Cause | Fix |
@@ -714,7 +822,10 @@ For the agent to perform UI steps, it needs:
 | Data Kits "Update" button greyed out | Prerequisites not met on Basic Settings | Complete all prior green checkmarks first |
 | Data Kit deployment errors on Flow kit | Known intermittent issue | Click "Retry" — it only reruns failed kits |
 | Identity Resolution returns empty | ContactPointEmail has no data | Verify `ssot__ContactPointEmail__dlm` has records |
-| Data Graph creation fails | No Unified Individual exists | Complete IR (Step 5) first |
+| Data Graph creation fails (API) | No Unified Individual exists | Complete IR (Step 5) first |
+| Data Graph API returns `INTERNAL_ERROR: null` | Server-side NPE bug in SSOT `/data-graphs` POST for type 1 | Use browser automation UI instead — API is broken as of 2026-06-30 |
+| Data Graph API "Unrecognized field" | Wrong field names (see Step 6 for correct schema) | Use: `name`, `label`, `dataspaceName` (lowercase s), `type` (integer), `primaryObjectName`, `sourceObject.name`, `sourceFieldName` |
+| Data Graph API "DataspaceName required" | Using `dataSpaceName` (capital S) or omitting field | Use `dataspaceName` (all lowercase 's' in space) |
 | Marketing Performance install greyed out | Data Kits not yet deployed | Wait for Step 4 to complete |
 | Einstein Send Time "In Progress" forever | Normal — takes 72 hours to fully activate | Just wait |
 | "This data has masking applied" on Data Graph | Known bug with DataKit-deployed graphs | Workaround: clone the graph in UI |
@@ -769,10 +880,9 @@ PHASE 2 — BROWSER AUTOMATION (agent uses MCP browser tools):
   □ Link Data Graph in personalization dropdown (Step 6 final)
 
 PHASE 3 — PROGRAMMATIC (SF CLI, after data kits deployed):
-  □ sf data360 identity-resolution create ... (Step 5)
-  □ sf data360 identity-resolution run ... (Step 5)
-  □ Verify Unified Individual created
-  □ sf data360 data-graph create ... (Step 6)
+  ✅ sf api request rest /ssot/identity-resolutions --method POST (Step 5 - Individual + Account)
+  ✅ Verify Unified Individual + Account created (2,126 + 902 profiles)
+  □ Create Data Graph via browser automation (Step 6 — API broken)
   □ Create Consent Framework via sObject API (Step 10)
   □ Create Marketing Flows via automation-flow-generate (Step 11)
   □ Create Campaign Agent via agentforce-generate (Step 12)
