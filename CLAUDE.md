@@ -238,10 +238,33 @@ curl -s "https://mcmn8m8yvnsgn6fnl3jft2xmc6s4.rest.marketingcloudapis.com/platfo
 
 ---
 
+### ⚡ CRITICAL: Salesforce Documentation Retrieval
+
+**DO NOT use WebFetch or curl on Salesforce Help/Developer docs — they return empty shells.**
+
+Use the `platform-docs-get` skill instead:
+```bash
+# For help.salesforce.com (ALWAYS use --stealth)
+python3 skills/platform-docs-get/scripts/extract_help_salesforce.py --url "<URL>" --stealth --pretty
+
+# For developer.salesforce.com or other SF doc sites
+python3 skills/platform-docs-get/scripts/extract_salesforce_doc.py --url "<URL>" --stealth --pretty
+```
+
+**⚠️ Article IDs are NOT guessable and change over time.** Do NOT try random IDs.
+Navigate from known-good pages instead. **READ `setup-guides/salesforce-docs-retrieval.md`** — it has:
+- Known-good entry point URLs to start from
+- The navigation workflow to find any article
+- Article ID prefix patterns (`data.c360_a_*`, `sf.mc_*`, `mktg.*`)
+- A complete verified index of DC → MCE activation docs
+- Troubleshooting for common failures
+
+---
+
 1. **NEVER commit or expose credentials** — They're in `config/.env` which is gitignored
 2. **Read `setup-guides/` first** before starting work on any platform — they contain proven workflows and pitfalls
 3. **Read `SKILLS.md`** for Data Cloud CLI commands, templates, and phase-by-phase reference — it has everything you need for `sf data360` operations
-4. **Read `AGENTS.md`** for the full inventory of 28 installed Salesforce skills and how to use them
+4. **Read `AGENTS.md`** for the full inventory of all 87 installed Salesforce skills and how to use them
 5. **Test against the SDO freely** — it's a demo org, nothing is production
 6. **Journey names**: No `& < > " ' /` characters
 7. **Emails for sending**: Always type 207 with full `data.email` block
@@ -250,4 +273,5 @@ curl -s "https://mcmn8m8yvnsgn6fnl3jft2xmc6s4.rest.marketingcloudapis.com/platfo
 10. **Keep demo content professional** — Use realistic brand names (NTO, Cumulus Financial, etc.)
 11. **For Data Cloud work**: Use `sf data360` CLI commands documented in `SKILLS.md`. Run the org diagnostic first: `node skills/data360-orchestrate/scripts/diagnose-org.mjs -o phil_master_sdo --json`
 12. **Skill deep-dives**: Individual skill SKILL.md files in `skills/` have detailed workflows, gotchas, and output formats
-13. **COMMIT AND PUSH at the end of every session** — Do not leave work as local-only untracked files. Commit meaningful progress and push to origin/main before the session ends.
+13. **For Salesforce documentation**: Use `platform-docs-get` skill — normal web fetch fails on SF docs. See rule above.
+14. **COMMIT AND PUSH at the end of every session** — Do not leave work as local-only untracked files. Commit meaningful progress and push to origin/main before the session ends.

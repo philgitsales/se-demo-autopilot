@@ -345,6 +345,15 @@ sf data360 segment publish -o <org> --name My_Segment_Developer_Name 2>/dev/null
 - If `lastSegmentMemberCount` is 0, the DMOs have no data — you need to run data streams first (UI-only for SFDC connector)
 - Publish with `FULL_REFRESH` replaces all rows; `INCREMENTAL` adds/updates only changes
 - Multiple activations can reference the same segment — each creates its own DE
+- **DE materialization lag**: After the activation shows SUCCESS, the Data Extension in MC can take **2-8+ hours** to appear. The folder is created immediately, but the DE itself is delayed by MC's async processing queue.
+- **contactPointsConfig (Email) via API**: The SSOT API silently strips `contactPointsConfig` when creating activations — you pass it but the GET response shows `contactPoints: []`. To include email in the DE, **create the activation via Data Cloud UI instead**. UI-created activations DO get email (EmailAddress field + IsSendable=true).
+
+### MC Data Extension Details (when it arrives):
+- **CustomerKey format**: `{SegmentId}_{ActivationId}` (e.g., `1sgg70000006MQrAAM_85Rg70000002YK9EAM`)
+- **Fields (UI-created with email)**: Id, SubscriberKey, EmailAddress
+- **Fields (API-created without email)**: Id only (just the Individual ssot__Id__c)
+- **IsSendable**: `true` (for UI-created activations with email)
+- **Folder**: Created inside the activation's named folder under Data Cloud parent folder (716415)
 
 ---
 
@@ -378,6 +387,11 @@ Account DMO:                  ssot__Account__dlm      (standard — same in all 
 | `"Primary Attribute of activateOnEntity is Missing"` | Missing `attributesConfig` | Add at least the primary key attribute |
 | `"Error occurred while fetching activation target"` | Target is broken (missing internal config) | Delete and recreate with correct 7M4 ID |
 | `businessUnitsToDataSpaces` is empty | MC Connection OAuth not completed | Redo Step 1 in UI |
+| `"Unrecognized field \"queryPath\""` | contactPointsConfig format doesn't match API creation schema | Use UI to create activations with email |
+| `"Unrecognized field \"fieldConfig\""` | Same as above — read-only fields in GET response | Use UI for email-enabled activations |
+| Activation SUCCESS but no DE in MC | Normal latency — MC processes asynchronously | Wait 2-8 hours; check folder was created as interim indicator |
+| Email dimension shows "Not Available" in UI | ContactPointEmail relationship metadata not resolved | Data exists but activation UI can't display it — recreate activation via UI |
+| contactPointsConfig silently returns empty | API strips email config during POST | Only UI-created activations include email in the DE |
 
 ---
 
@@ -413,3 +427,32 @@ sf api request rest "/services/data/v64.0/ssot/activations" -o <org> 2>/dev/null
 |------|-----------------|
 | MC Connection OAuth (Step 1) | Browser-based OAuth2 redirect flow between SF and MC. Creates internal trust chain that API cannot replicate. |
 | SalesforceDotCom data stream sync | Platform limitation: `"Connector type SalesforceDotCom is not allowed to run in non-interactive mode"` |
+| Adding Email to activation contactPointsConfig | API silently strips contactPointsConfig — only UI-created activations include EmailAddress field in the DE |
+
+---
+
+## Proven End-to-End Results (2026-06-30)
+
+### What works:
+1. **Create Segment → Create Activation → Publish → DE lands in MC** ✅
+2. **Activation audience table populated** (4,252 rows for 213-member segment — includes duplicates from audience materialization)
+3. **DE is IsSendable=true** when created via UI with email
+4. **Real email data flows** (e.g., `paul.harris6@luminaillcge.com`)
+5. **Full refresh cycle**: ~5-8 minutes from publish to activation SUCCESS on DC side
+6. **MC lag**: DE appears 2-8+ hours after DC activation shows SUCCESS
+
+### Timing expectations:
+| Stage | Duration |
+|-------|----------|
+| Segment publish (SQL eval) | 3-5 minutes |
+| Activation detects publish | 1-2 minutes |
+| Activation PUBLISHING phase | 3-5 minutes |
+| Activation shows SUCCESS | After PUBLISHING |
+| MC folder created | Within minutes of SUCCESS |
+| **MC DE materializes** | **2-8+ hours after SUCCESS** |
+
+### What doesn't work via API:
+- `contactPointsConfig` with email → silently stripped (use UI)
+- `queryPath` field in contactPointsConfig → "Unrecognized field"
+- `fieldConfig` in contactPointsConfig → "Unrecognized field"
+- Only `"type": "EMAIL"` is accepted, but the email config is ignored
