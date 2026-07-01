@@ -1,7 +1,41 @@
 # SE Demo Autopilot — Agent Instructions
 
 > **Status**: Active Development (Phase 1 — API Capability Validation COMPLETE)
-> **Last Updated**: 2026-06-27
+> **Last Updated**: 2026-06-30
+
+---
+
+## ⚠️ ABSOLUTE RULES — NEVER GUESS (READ BEFORE EVERY TASK)
+
+**These rules override everything else. Follow them in order for EVERY unknown or uncertain situation.**
+
+### Rule 1: NEVER GUESS OR TRIAL-AND-ERROR
+
+When you encounter something you don't know how to do, are unsure about, or your first attempt fails — **STOP IMMEDIATELY**. Do NOT try random variations, guess URL patterns, probe APIs with different field names, or brute-force solutions. This wastes time and tokens.
+
+### Rule 2: Consult Documentation FIRST
+
+Before attempting any action you're uncertain about:
+1. Check this project's `setup-guides/` and `docs/` folders for existing documentation
+2. Use the `platform-docs-get` skill to retrieve official Salesforce documentation
+3. Search the `data-cloud-setup/product-docs/` folder for relevant reference material
+
+### Rule 3: If Documentation Doesn't Answer It — Search Slack
+
+If the documentation doesn't provide a clear answer:
+1. Use the Slack search tools (`slack_search_public_and_private`, `slack_search_public`) to search relevant channels for solutions
+2. Key channels to search: `#help-sell-mc-next`, `#help-csg-marketingcloud-next`, `#q-branch-xdo-license-extension-requests`
+3. Look for threads where others have solved the same problem
+
+### Rule 4: If Both Fail — ASK THE HUMAN
+
+If after consulting documentation AND searching Slack you still cannot find a clear solution:
+1. **STOP** — do not attempt anything
+2. Tell the human what you tried (which docs you checked, what Slack searches you ran)
+3. Present the options you see and ask for guidance
+4. Wait for direction before proceeding
+
+**This 3-step escalation (Docs → Slack → Ask Human) applies to EVERY task, EVERY session, EVERY new chat.**
 
 ---
 

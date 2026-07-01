@@ -418,25 +418,115 @@ The correct field names for the API were reverse-engineered by probing:
 - Type 1 always returns `INTERNAL_ERROR: null` (Java NPE in `CdpDataGraphSourceInputRepresentation.getFields().stream()`)
 - Type 0 requires `prefetchPreference` but that field name is unknown
 
-### Browser Automation Fallback (RECOMMENDED):
+### Manual UI Creation (REQUIRED — automation blocked on Add button interaction):
 
-**UI Path**: Data Cloud app → Data Graphs tab → New → Start From Scratch
+**Direct URL** (log in first, then navigate):
+```
+Login:   sf org open -o phil_master_sdo --url-only
+         (paste the OTP URL into browser to authenticate)
 
-**Alternative path**: Setup → Marketing Cloud → Assisted Setup → Reporting and Optimization → Customer Engagement (may have "Configure Basic Personalization" with Data Graph dropdown)
+Page:    https://storm-e3b3a339aa547e.my.salesforce.com/lightning/o/DataGraph/home
+```
 
-**Steps for agent**:
-1. Get front-door URL: `sf org open -o phil_master_sdo --url-only`
-2. Navigate to Data Cloud app (try `/lightning/o/DataGraph/home` or use App Launcher → "Data Cloud")
-3. Look for "Data Graphs" tab or "New Data Graph" button
-4. Create from scratch:
-   - Root entity: `UnifiedIndividual__dlm` (from IR ruleset "Main")
-   - Select fields: `ssot__Id__c`, `ssot__FirstName__c`, `ssot__LastName__c`, `ssot__Salutation__c`, `ssot__BirthDate__c`
-   - No related objects needed for basic personalization
+**Alternative navigation** (if direct URL doesn't work):
+1. Navigate to Data Cloud app: `https://storm-e3b3a339aa547e.lightning.force.com/lightning/app/standard__LightningDataCloudManagement`
+2. Click "Show more navigation items" in the top nav bar
+3. Click "Data Graphs" from the expanded menu
 
-### Then enable in Basic Settings (UI):
-1. Setup → Marketing Cloud → Assisted Setup → Reporting and Optimization → Customer Engagement
-2. Check "Configure Basic Personalization"
-3. Select the Data Graph from dropdown
+**Wizard Steps (confirmed 2026-06-30)**:
+1. Click **"New"** button on the Data Graphs list view
+2. Select **"Start from Scratch"** (not "Use a Data Kit") → click **Next**
+3. Select **"Standard Data Graph"** (NOT Real-Time) → click **Next**
+4. Fill form:
+   - **Data Graph Name**: `MCA Personalization`
+   - **Data Graph API Name**: `MCA_Personalization`
+   - **Data Space**: `default` (pre-filled)
+   - **Primary Data Model Object**: type "Unified Individual" → select `Unified Individual (UnifiedIndividual__dlm)` from dropdown
+5. Click **Next** → confirmation page → click **Next** again
+6. Arrives at the **field/object selection builder** (full-page view)
+
+**Builder Page Interface**:
+- **Top buttons**: Edit Properties | Preview | Save Draft | Save and Build
+- **Left panel**: Search combobox + object tree + counters (X/25 objects, Y/200 fields)
+- **Right panel**: Fields tab (grid of fields with checkboxes) | Filters tab
+- **"Add" button**: Appears next to each object in the tree — click to expand and show related objects that can be added
+
+### Required Data Graph Shape (from Salesforce Article 005166888):
+
+**CRITICAL**: A Data Graph for MCA personalization needs MULTIPLE related objects, not just fields on the primary object. The required structure is:
+
+```
+Unified Individual (Primary DMO)
+├── Unified Link Individual
+├── Individual
+│   └── MUST include: Individual ID
+├── Contact Point Email
+│   └── MUST include: Email Address
+└── Contact Point Phone
+    └── MUST include: Telephone Number
+```
+
+**Source**: https://help.salesforce.com/s/articleView?id=005166888&type=1
+**Slack confirmation**: Jordy Letainturier (#help-csg-marketingcloud-next, 2026-01-08) — explicitly says you need Contact Point Email and Contact Point Phone as related objects.
+
+### Steps in the Builder (EXACT click-by-click):
+
+**Part A — Add Related Objects** (left panel):
+
+| # | Action | What to click/interact with |
+|---|--------|---------------------------|
+| 1 | Click the **"Add"** button (+ icon) next to "Unified Individual (Primary Data Model Object)" | This should expand to show related objects available via direct relationships |
+| 2 | Add **Unified Link Individual** | Select `IndividualIdentityLink__dlm` from the expanded list |
+| 3 | Add **Individual** | Select `ssot__Individual__dlm` from the expanded list |
+| 4 | Add **Contact Point Email** | Select `ssot__ContactPointEmail__dlm` from the expanded list |
+| 5 | Add **Contact Point Phone** | Select `ssot__ContactPointPhone__dlm` from the expanded list |
+
+> **NOTE**: If the "Add" button doesn't show a dropdown, try the Search combobox at the top-left — type the object name and select from results. The Slack thread (#d360-data-graphs, 2026-06-03) confirms both methods work for directly-related objects.
+
+**Part B — Select Fields** (right panel — Fields tab):
+
+Click each object in the left tree to load its fields in the right panel, then select:
+
+| Object (click in tree) | Fields to SELECT (click in grid) |
+|------------------------|----------------------------------|
+| **Unified Individual** | `First Name`, `Last Name` (key field "Unified Individual Id" is auto-selected) |
+| **Unified Link Individual** | Key fields auto-included — no additional needed |
+| **Individual** | `Individual Id` ← **REQUIRED for MCA** |
+| **Contact Point Email** | `Email Address` ← **REQUIRED for MCA** |
+| **Contact Point Phone** | `Telephone Number` ← **REQUIRED for MCA** |
+
+> **Field selection mechanism**: Click the row in the fields grid. If clicking a row doesn't toggle selection, try: (a) click the field label text directly, (b) try pressing Space while a row is focused, (c) look for a checkbox column that may not be visible initially.
+
+**Part C — Save and Build**:
+
+| # | Action | Button |
+|---|--------|--------|
+| 1 | Click **"Save and Build"** (top-right area) | This saves AND triggers the build process |
+| 2 | Wait for build to complete | Status should change from "Building" → "Built" |
+| 3 | Verify in the Data Graphs list | Should show "MCA Personalization" with status "Built" |
+
+> **DO NOT** click just "Save Draft" — that saves without building. The graph must be in "Built" status for Step 7 to work.
+
+### UI Builder Notes (2026-06-30 session):
+- The builder page has: "Edit Properties", "Preview", "Save Draft", "Save and Build" buttons
+- Left panel shows object tree with "Add" button for related objects
+- Right panel shows "Fields" tab and "Filters" tab for the selected object
+- Counter at top: "X/25 objects selected" and "Y/200 non-key fields selected"
+- Primary Key (Unified Individual Id) is auto-selected (1/18 shown in field counter)
+- **KNOWN ISSUE**: The "Add" button click does NOT produce a visible popup in the accessibility tree (tested 2026-06-30). This blocks browser automation. The interaction works visually but the custom Lightning Web Component doesn't expose the resulting UI to assistive technology properly.
+- **Workaround that works for others** (per Slack #d360-data-graphs): Navigate through the relationship path by clicking "+" icons that appear on each object in the tree to traverse to its child relationships
+
+### Then enable in Basic Settings (Step 7 — do AFTER graph shows "Built" status):
+
+**URL**: `https://storm-e3b3a339aa547e.my.salesforce.com/lightning/setup/MCNextSetup/home`
+(Setup → Marketing Cloud → Basic Settings, then scroll to "Reporting and Optimization" section)
+
+1. Find "Reporting and Optimization" → "Customer Engagement" section
+2. Check **"Configure Basic Personalization"** checkbox
+3. Select **"MCA Personalization"** from the Data Graph dropdown
+4. Click **Save**
+
+> The Data Graph MUST be in "Built" status (not just Draft) for it to appear in the dropdown.
 
 ### Verify:
 ```bash
@@ -451,7 +541,9 @@ sf data360 data-graph metadata -o phil_master_sdo 2>/dev/null
 - `name` field max 30 characters
 - The graph refresh is ~30 minutes by default (configurable to daily/weekly)
 - Full MCA personalization needs the graph linked in Basic Settings (UI step after creation)
-- The Data Graph UI page might not have a direct Setup URL slug — navigate via App Launcher or the Data Cloud app
+- **MUST include related objects** (Individual, Contact Point Email, Contact Point Phone) for personalization to work — just having the primary object is insufficient
+- The Data Graph UI page does NOT have a direct Setup URL slug — navigate via Data Cloud app → "Show more navigation items" → "Data Graphs"
+- Grid field selection mechanism is unclear from a11y tree — rows don't expose checkboxes. May need to try clicking row text, or use keyboard Space/Enter after focusing
 
 ---
 
