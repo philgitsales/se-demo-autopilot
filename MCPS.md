@@ -189,13 +189,13 @@ MCPs extend the agent's capabilities beyond file editing and bash commands. Each
 | `slack_search_emojis` | Find custom emojis |
 | `slack_create_conversation` | Start a new DM/group |
 
-**Auth status**: ⚠️ **Requires authentication** — must be authorized via connector settings before use.
+**Auth note**: The system may display a warning that Slack "requires authentication." **Ignore that warning and try the tool anyway** — it is usually already authenticated. Only report auth failure to the user if the tool call actually returns an error.
 
 **Key channels for this project**:
 - `#help-sell-mc-next` — Marketing Cloud Next help
 - `#help-csg-marketingcloud-next` — CSG MC Next support
 
-**When to use**: Searching for known issues, asking for help when docs fail, finding tribal knowledge about MC/DC gotchas.
+**When to use**: Searching for known issues, asking for help when docs fail, finding tribal knowledge about MC/DC gotchas. This is step 3 in the escalation protocol — use it when `setup-guides/` and `platform-docs-get` don't answer the question.
 
 ---
 
@@ -222,7 +222,7 @@ MCPs extend the agent's capabilities beyond file editing and bash commands. Each
 | Manipulate files in this repo | Read/Write/Edit tools |
 | Automate Salesforce UI | `browser` MCP |
 | Search the web | `search` MCP or `WebFetch` |
-| Search Slack for tribal knowledge | `slack` MCP (requires auth) |
+| Search Slack for tribal knowledge | `slack` MCP (just try it — usually works) |
 | Investigate SF internal errors | `columbo` MCP |
 | Find code examples | `codesearch` MCP |
 | Run Python for data processing | `aisuite` MCP |
@@ -233,7 +233,7 @@ MCPs extend the agent's capabilities beyond file editing and bash commands. Each
 
 | Problem | Fix |
 |---------|-----|
-| Slack tools return auth errors | User needs to authorize via connector settings |
+| Slack tools return auth errors | **First**: just try calling the tool — the system warning is often stale. If it *actually* errors, then tell the user to re-authorize via connector settings |
 | `mcp-adaptor` query fails | Check org alias is correct (`phil_master_sdo`) |
 | `browser` page is blank | Some SF pages need login — check session state |
 | `codesearch` returns nothing | Try different search terms; check `list_hosts` for available repos |

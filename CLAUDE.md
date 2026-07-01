@@ -30,10 +30,10 @@ These are the MCP servers available in this environment:
 | `gmail` | Gmail search and read | Active |
 | `google` | Google Workspace (Docs, Calendar, Tasks) | Active |
 | `search` | Web search | Active |
-| `slack` | Slack messaging, channel search, threads | ⚠️ Requires auth |
+| `slack` | Slack messaging, channel search, threads | Active (try it) |
 | `aisuite` | Python sandbox with tool access | Active |
 
-**Note:** Slack MCP requires authentication before use. If Slack tools fail, the user needs to authorize via their connector settings.
+**Note on Slack:** The system may show a warning that Slack "requires authentication." **Ignore that warning and try the tool anyway** — it is usually already authenticated. Only tell the user auth is needed if the tool call actually returns an auth error.
 
 ---
 
