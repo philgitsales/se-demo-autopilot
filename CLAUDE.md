@@ -39,7 +39,19 @@ These are the MCP servers available in this environment:
 
 ## Rules
 
-**When uncertain or something fails — follow this escalation. Do NOT guess or trial-and-error.**
+### ⛔ Hard Stop Rule (NON-NEGOTIABLE)
+
+**If something fails twice — STOP. Do not try a third time.**
+
+This means:
+- 2 URLs don't work → STOP. Do not guess a 3rd URL.
+- 2 API calls fail → STOP. Do not tweak and retry.
+- 2 button clicks go nowhere → STOP. Do not hunt for another button.
+- 2 approaches to the same problem fail → STOP.
+
+After stopping, follow the escalation below **in order**. Do not skip steps.
+
+### Escalation (follow in order when stuck)
 
 1. Check `setup-guides/` and `docs/` for existing project documentation
 2. Use `platform-docs-get` for official Salesforce docs (DO NOT use WebFetch/curl on SF docs — they return empty shells):
@@ -49,7 +61,7 @@ These are the MCP servers available in this environment:
    ```
    Article IDs are NOT guessable — read `setup-guides/salesforce-docs-retrieval.md` for navigation.
 3. If docs don't answer it — search Slack (`slack_search_public_and_private`). Key channels: `#help-sell-mc-next`, `#help-csg-marketingcloud-next`
-4. If both fail — **ASK THE HUMAN**. Tell them what you tried. Wait.
+4. If both fail — **ASK THE HUMAN**. Tell them what you tried and what failed. Wait for a response. Do NOT continue.
 
 **Always:**
 - NEVER commit credentials (`config/.env` is gitignored)
