@@ -4,6 +4,39 @@
 
 ---
 
+## Environment
+
+| Component | Detail |
+|---|---|
+| SDO | Phil's Master SDO |
+| Org Alias | `phil_master_sdo` |
+| Data Space | `default` |
+| MC Business Unit | `523019897` (MedVet) |
+| MC Activation Target | `pk_test_mc` (ID: `85Ug70000023IAXEA2`) |
+| Identity Resolution | Ruleset `Main` — PUBLISHED, 2,126 unified profiles |
+| Data Cloud Status | Fully operational (see `data-cloud-setup/README.md`) |
+
+### Connected MCPs
+
+These are the MCP servers available in this environment:
+
+| MCP | What it does | Auth status |
+|---|---|---|
+| `mcp-adaptor` | Salesforce org queries, service definitions, file/directory access | Active |
+| `browser` | Browser automation (navigate, click, type, screenshot) | Active |
+| `codesearch` | Search code across repos (blame, blob, diff, history) | Active |
+| `columbo` | Gack/error investigation and stack trace analysis | Active |
+| `github` | GitHub PRs, issues, checks | Active |
+| `gmail` | Gmail search and read | Active |
+| `google` | Google Workspace (Docs, Calendar, Tasks) | Active |
+| `search` | Web search | Active |
+| `slack` | Slack messaging, channel search, threads | ⚠️ Requires auth |
+| `aisuite` | Python sandbox with tool access | Active |
+
+**Note:** Slack MCP requires authentication before use. If Slack tools fail, the user needs to authorize via their connector settings.
+
+---
+
 ## Rules
 
 **When uncertain or something fails — follow this escalation. Do NOT guess or trial-and-error.**
@@ -52,6 +85,7 @@ Update the workstream file when you make progress.
 | All platform setup guides | `setup-guides/README.md` |
 | Data Cloud CLI commands | `SKILLS.md` |
 | All installed SF skills | `AGENTS.md` |
+| Connected MCP servers | `MCPS.md` |
 | Org credentials | `config/.env` (NEVER commit) |
 
 ```
@@ -59,6 +93,7 @@ se-demo-autopilot/
 ├── CLAUDE.md              ← You are here
 ├── SKILLS.md              ← Data Cloud CLI reference
 ├── AGENTS.md              ← Installed SF skills inventory
+├── MCPS.md               ← Connected MCP servers & when to use them
 ├── config/.env            ← Credentials (gitignored)
 ├── setup-guides/          ← Platform setup playbooks
 ├── docs/                  ← Architecture, API guides, roadmap, workstreams
