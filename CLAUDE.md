@@ -26,7 +26,7 @@
 - Keep demo content professional (use NTO, Cumulus Financial, etc.)
 - For Data Cloud work, read `SKILLS.md` first
 - Before delivering output, re-read the relevant rules/guides and verify compliance
-- Before ending a session: update the workstream file, commit, and push
+- After completing a step, feature, or discovery: update the workstream file and prompt the user to authorize a commit + push
 
 ---
 
